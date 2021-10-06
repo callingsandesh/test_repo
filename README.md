@@ -114,29 +114,6 @@ def connect(database_name):
 
 The below function is used to insert data on bulk to the database tables.
 > `src\helper.py`
-
-```
-from psycopg2.extras import execute_values
-import json
-
-def execute_select_query(query,connection):
-    """This is the method to execute the select sql query given the parameter the query and connection method"""
-    try:
-        conn=connection
-        #print(conn)
-        cur=conn.cursor()
-        cur.execute(query)
-        data=cur.fetchall()
-
-    except(Exception) as e:
-        print(e)
-    finally:
-        if(conn):
-            cur.close()
-            conn.close()
-            return data
-
-```
 ```
 
 def execute_bulk_insert(query,connection,data):
@@ -160,6 +137,72 @@ def execute_bulk_insert(query,connection,data):
 ```
 
 
-After that, used the pipeline to push the data to the raw tables.
+```
+from psycopg2.extras import execute_values
+import json
+
+def execute_select_query(query,connection):
+    """This is the method to execute the select sql query given the parameter the query and connection method"""
+    try:
+        conn=connection
+        #print(conn)
+        cur=conn.cursor()
+        cur.execute(query)
+        data=cur.fetchall()
+
+    except(Exception) as e:
+        print(e)
+    finally:
+        if(conn):
+            cur.close()
+            conn.close()
+            return data
+
+```
+
+
+After that, the used the pipeline to push the data to the raw tables.
+> `src\execute_into_raw_table.py`
+There are 3 function inside this file.The explanation of each one are:
+```
+def convert_dist_into_list(data):
+    '''This function converts the data of type dict into list of values'''
+    return [[json.dumps(ele) if type(ele)==dict else ele for ele in item.values() ] for item in data]
+```
+The above function converts the data given into dictionary into list of values of the dict.
+
+```
+def extract_data(file_path,query_path,database_name,batch_size):
+    '''This function extracts raw json data into the raw tables'''
+    #print(database_name)
+    with open(query_path,'r') as q:
+        q=q.read()
+
+    with open(file_path,'r') as f:
+        data=[]
+        i=0
+        for line in f:
+            data.append(json.loads(line))
+            i+=1
+
+            if i==batch_size:
+    
+                execute_bulk_insert(q,connect(database_name),convert_dist_into_list(data))
+                i=0
+                data=[]
+                continue
+        #execute the remaining data
+        if data!=[]:
+            execute_bulk_insert(q,connect(database_name),convert_dist_into_list(data))
+```
+
+The above function takes the file path, query path and batch size as an argument to the function.
+It first open the quey path for execution of the data and  then it opens the file path of the data.After the it reads line by line the data and after it reaches the batch number it bulk inserts that data by calling the function execute_bul_insert().
+
+
+After the above all datas are inserted , I create the schemas for the database warehouse.
+The following are the list of schemas:
+> `schema\create_`
+
 
 
