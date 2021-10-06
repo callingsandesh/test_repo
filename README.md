@@ -4,7 +4,7 @@
 
 
 
--> schema\create_table_raw_business.sql
+> schema\create_table_raw_business.sql
 
 ```
 create table raw_business (
