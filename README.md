@@ -666,56 +666,52 @@ WITH CTE_all_business as (
 		else RestaurantsTakeOut::boolean
 		end RestaurantsTakeOut,
 		
-		
 		case when cast(Ambience->'touristy' as text)='null' then null
-	    else cast(cast(Ambience->'touristy' as text) as boolean)
-	    end as ambience_touristy,
-	    case when cast(Ambience->'intimate' as text)='null' then null
-	    else cast(cast(Ambience->'intimate' as text) as boolean)
-	    end as ambience_intimate,
-	    case when cast(Ambience->'romantic' as text)='null' then null
-	    else cast(cast(Ambience->'romantic' as text) as boolean)
-	    end as ambience_romantic,
-	    case when cast(Ambience->'hipster' as text)='null' then null
-	    else cast(cast(Ambience->'hipster' as text) as boolean)
-	    end as ambience_hipster,
-	    case when cast(Ambience->'divey' as text)='null' then null
-	    else cast(cast(Ambience->'divey' as text) as boolean)
-	    end as ambience_divey,
-	    case when cast(Ambience->'classy' as text)='null' then null
-	    else cast(cast(Ambience->'classy' as text) as boolean)
-	    end as ambience_classy,
-	    case when cast(Ambience->'trendy' as text)='null' then null
-	    else cast(cast(Ambience->'trendy' as text) as boolean)
-	    end as ambience_trendy,
-	    case when cast(Ambience->'upscale' as text)='null' then null
-	    else cast(cast(Ambience->'upscale' as text) as boolean)
-	    end as ambience_upscale,
-	    case when cast(Ambience->'casual' as text)='null' then null
-	    else cast(cast(Ambience->'casual' as text) as boolean)
-	    end as ambience_casual,
+	        else cast(cast(Ambience->'touristy' as text) as boolean)
+	        end as ambience_touristy,
+	        case when cast(Ambience->'intimate' as text)='null' then null
+	        else cast(cast(Ambience->'intimate' as text) as boolean)
+	        end as ambience_intimate,
+	        case when cast(Ambience->'romantic' as text)='null' then null
+	        else cast(cast(Ambience->'romantic' as text) as boolean)
+	        end as ambience_romantic,
+	        case when cast(Ambience->'hipster' as text)='null' then null
+	        else cast(cast(Ambience->'hipster' as text) as boolean)
+	        end as ambience_hipster,
+	        case when cast(Ambience->'divey' as text)='null' then null
+	        else cast(cast(Ambience->'divey' as text) as boolean)
+	        end as ambience_divey,
+	        case when cast(Ambience->'classy' as text)='null' then null
+	        else cast(cast(Ambience->'classy' as text) as boolean)
+	        end as ambience_classy,
+	        case when cast(Ambience->'trendy' as text)='null' then null
+	        else cast(cast(Ambience->'trendy' as text) as boolean)
+	        end as ambience_trendy,
+	        case when cast(Ambience->'upscale' as text)='null' then null
+	        else cast(cast(Ambience->'upscale' as text) as boolean)
+	        end as ambience_upscale,
+	        case when cast(Ambience->'casual' as text)='null' then null
+	        else cast(cast(Ambience->'casual' as text) as boolean)
+	        end as ambience_casual,
 		
-
-	    case when cast(GoodForMeal->'dessert' as text)='null' then null
-	    else cast(cast(GoodForMeal->'dessert' as text) as boolean)
-	    end as GoodForMeal_dessert,
-	    case when cast(GoodForMeal->'latenight' as text)='null' then null
-	    else cast(cast(GoodForMeal->'latenight' as text) as boolean)
-	    end as GoodForMeal_latenight,
-	    case when cast(GoodForMeal->'lunch' as text)='null' then null
-	    else cast(cast(GoodForMeal->'lunch' as text) as boolean)
-	    end as GoodForMeal_lunch,
-	    case when cast(GoodForMeal->'dinner' as text)='null' then null
-	    else cast(cast(GoodForMeal->'dinner' as text) as boolean)
-	    end as GoodForMeal_dinner,
-	    case when cast(GoodForMeal->'brunch' as text)='null' then null
-	    else cast(cast(GoodForMeal->'brunch' as text) as boolean)
-	    end as GoodForMeal_brunch,
-	    case when cast(GoodForMeal->'breakfast' as text)='null' then null
-	    else cast(cast(GoodForMeal->'breakfast' as text) as boolean)
-	    end as GoodForMeal_breakfast,
-		
-		
+		case when cast(GoodForMeal->'dessert' as text)='null' then null
+	        else cast(cast(GoodForMeal->'dessert' as text) as boolean)
+	        end as GoodForMeal_dessert,
+	        case when cast(GoodForMeal->'latenight' as text)='null' then null
+	        else cast(cast(GoodForMeal->'latenight' as text) as boolean)
+	        end as GoodForMeal_latenight,
+	        case when cast(GoodForMeal->'lunch' as text)='null' then null
+	        else cast(cast(GoodForMeal->'lunch' as text) as boolean)
+	        end as GoodForMeal_lunch,
+	        case when cast(GoodForMeal->'dinner' as text)='null' then null
+	        else cast(cast(GoodForMeal->'dinner' as text) as boolean)
+	        end as GoodForMeal_dinner,
+	        case when cast(GoodForMeal->'brunch' as text)='null' then null
+	        else cast(cast(GoodForMeal->'brunch' as text) as boolean)
+	        end as GoodForMeal_brunch,
+	        case when cast(GoodForMeal->'breakfast' as text)='null' then null
+	        else cast(cast(GoodForMeal->'breakfast' as text) as boolean)
+	        end as GoodForMeal_breakfast,
 		
 		case when BikeParking='None' then null
 		else BikeParking::boolean
@@ -772,6 +768,8 @@ WITH CTE_all_business as (
 		end GoodForDancing
 		
 	from CTE_all_business
+	
+	
 ```
 
 
