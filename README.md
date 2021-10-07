@@ -961,7 +961,7 @@ if __name__=='__main__':
     while True:
         if datetime.now() > datetime.strptime(time_to_execute_the_function, '%Y-%m-%d %H:%M:%S'):
             print("Time reached")
-            for path,splitter in query_path_and_splitter.items():
+            for path,splitter in query_path_and_splitter_long_time.items():
                 extract_data(path,splitter,database_name,batchsize)
             break
 
