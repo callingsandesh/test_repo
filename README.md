@@ -1,6 +1,28 @@
 ## Physical Implemation
 
-### Firstly creating a raw  table ,according to the linear keys name of the .json, which is slightly jumbled in documentation provided by yelp.
+###  `utils.py` file to connect to the database.
+> `schema\src\utils.py`
+```
+import psycopg2
+import os
+from dotenv import load_dotenv
+from pathlib import Path
+load_dotenv()
+user=os.getenv("user")
+password=os.getenv("password")
+host=os.getenv("host")
+port=os.getenv("port")
+def connect(database_name):
+    return psycopg2.connect(user,
+                                  password,
+                                  host,
+                                  port,
+                                  database=database_name
+                                  )
+```
+As ,user_name , password , host , ports are the sensitive data , I have placed it into the .env file and imported in this `utils.py` and used it here.
+
+###  Creating the raw  table ,according to the linear keys name of the .json, which is slightly jumbled in documentation provided by yelp.
 
 
 
@@ -91,27 +113,7 @@ create table raw_photo(
 	)
 ```
 
-After the table was create I made the `utils.py` file to connect to the database.
-> `schema\src\utils.py`
-```
-import psycopg2
-import os
-from dotenv import load_dotenv
-from pathlib import Path
-load_dotenv()
-user=os.getenv("user")
-password=os.getenv("password")
-host=os.getenv("host")
-port=os.getenv("port")
-def connect(database_name):
-    return psycopg2.connect(user,
-                                  password,
-                                  host,
-                                  port,
-                                  database=database_name
-                                  )
-```
-As ,user_name , password , host , ports are the sensitive data , I have placed it into the .env file and imported in this `utils.py` and used it here.
+
 
 
 The below function is used to insert data on bulk to the database tables.
