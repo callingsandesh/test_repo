@@ -111,6 +111,8 @@ def connect(database_name):
                                   database=database_name
                                   )
 ```
+As ,user_name , password , host , ports are the sensitive data , I have placed it into the .env file and imported in this `utils.py` and used it here.
+
 
 The below function is used to insert data on bulk to the database tables.
 > `src\helper.py`
@@ -137,31 +139,9 @@ def execute_bulk_insert(query,connection,data):
 ```
 
 
-```
-from psycopg2.extras import execute_values
-import json
-
-def execute_select_query(query,connection):
-    """This is the method to execute the select sql query given the parameter the query and connection method"""
-    try:
-        conn=connection
-        #print(conn)
-        cur=conn.cursor()
-        cur.execute(query)
-        data=cur.fetchall()
-
-    except(Exception) as e:
-        print(e)
-    finally:
-        if(conn):
-            cur.close()
-            conn.close()
-            return data
-
-```
 
 
-After that, the used the pipeline to push the data to the raw tables.
+After that, I used the pipeline to push the data into the raw tables.
 > `src\execute_into_raw_table.py`
 There are 3 function inside this file.The explanation of each one are:
 ```
@@ -199,10 +179,243 @@ def extract_data(file_path,query_path,database_name,batch_size):
 The above function takes the file path, query path and batch size as an argument to the function.
 It first open the quey path for execution of the data and  then it opens the file path of the data.After the it reads line by line the data and after it reaches the batch number it bulk inserts that data by calling the function execute_bul_insert().
 
+```
+if __name__=='__main__':
+    database_name="yelp_db"
+    batch_size=10000
+
+    file_paths_and_query_path ={
+                'user':['../../datasets/yelp_dataset/yelp_academic_dataset_user.json','../sql/insert_into_raw_user.sql'],
+                'business':['../../datasets/yelp_dataset/yelp_academic_dataset_business.json','../sql/insert_into_raw_business.sql'],
+                'photos':['../../datasets/yelp_dataset/photos.json','../sql/insert_into_raw_photo.sql'],
+                'tip':['../../datasets/yelp_dataset/yelp_academic_dataset_tip.json','../sql/insert_into_raw_tip.sql'],
+                'review':['../../datasets/yelp_dataset/yelp_academic_dataset_review.json','../sql/insert_into_raw_review.sql'],
+                'checkin':['../../datasets/yelp_dataset/yelp_academic_dataset_checkin.json','../sql/insert_into_raw_checkin.sql']
+                }
+    
+    for paths in file_paths_and_query_path.values():
+        extract_data(paths[0],paths[1],database_name,batch_size)
+```
+The above main method is used to pass the file_path and the query_path ,databasename and batch_size to the `extract_date()` method, for the execution.
+
 
 After the above all datas are inserted , I create the schemas for the database warehouse.
 The following are the list of schemas:
-> `schema\create_`
+> `schema\create_fact_business.sql`
+```
+create table fact_business(
+		business_id varchar(255) primary key,
+		name varchar(255),
+		address varchar(255),
+		city varchar(255),
+		state varchar(255),
+		postal_code varchar(255),
+		location point,
+		stars numeric(2,1),
+		review_count int,
+		is_open boolean,
+		hours_monday varchar(255),
+		hours_tuesday varchar(255),
+		hours_wednesday varchar(255),
+		hours_thursday varchar(255),
+		hours_friday varchar(255),
+		hours_saturday varchar(255),
+		hours_sunday varchar(255),
+		wheelchairaccessible boolean,
+		parking_garage boolean,
+		parking_street boolean,
+		parking_validated boolean,
+		parking_lot boolean,
+		parking_valet boolean,
+		businessacceptscreditcards boolean,
+		outdoorseating boolean,
+		noiselevel varchar(255),
+		restaurantsdelivery boolean,
+		wifi varchar(255),
+		restaurantsattire varchar(255),
+		restaurantsgoodforgroups boolean,
+		corkage boolean,
+		caters boolean,
+		restaurantsreservations boolean,
+		alcohal text,
+		goodforkids boolean,
+		restaurantspricerange2 smallint,
+		restaurantstakeout boolean,
+		
+		ambience_touristy boolean,
+		ambience_intimate boolean, 
+		ambience_romantic boolean,
+		ambience_hipster boolean,
+		ambience_divey boolean,
+		ambience_classy boolean,
+		ambience_trendy boolean,
+		ambience_upscale boolean,
+		ambience_casual boolean,
+		
+		goodformeal_dessert boolean,
+		goodformeal_latenight boolean,
+		goodformeal_lunch boolean,
+		goodformeal_dinner boolean,
+		goodformeal_brunch boolean,
+		goodformeal_breakfast boolean,
+		
+		bikeparking boolean,
+		byobcorkage boolean,
+		hastv boolean,
+		byappointmentonly boolean,
+		happyhour boolean,
+		restaurantstableservice boolean,
+		dogsallowed boolean,
+		smoking varchar(255),
+		music json,
+		byob boolean,
+		coatcheck boolean,
+		bestnights json,
+		goodfordancing boolean
+	)
+```
+> `schema\create_table_fact_user.sql`
+```
+create table fact_user(
+	user_id VARCHAR(22) primary KEY,
+	name VARCHAR(255) not NULL,
+	review_count INT,
+	yelping_since TIMESTAMP,
+	useful INT,
+	funny INT,
+	cool INT,
+	fans INT,
+	friends_count INT,
+	average_stars NUMERIC,
+	compliment_hot INT,
+	compliment_more INT,
+	compliment_profile INT,
+	compliment_cute INT,
+	compliment_list INT,
+	comliment_note INT,
+	compliment_plain INT,
+	compliment_cool INT,
+	compliment_funny INT,
+	compliment_writer INT,
+	compliment_photos INT
+)
+```
+
+> `schema\create_table_dim_elite`
+```
+create table dim_elite(
+	user_id VARCHAR(255),
+	elite_year CHAR(4),
+	
+	constraint fk_dim_elite_fact_user_user_id
+	foreign key(user_id) references fact_user(user_id),
+	
+	primary KEY( user_id,elite_year)
+)
+```
+
+> `schema\create_table_total_user_tip_count.sql`
+```
+create table total_user_tip_count(
+	user_id VARCHAR(255) primary key ,
+	total_tip_count smallint,
+	constraint fk_total_user_tip_count
+	foreign key(user_id) references fact_user(user_id)
+)
+```
+
+> `schema\create_table_fact_review.sql`
+```
+create table fact_review(
+	review_id VARCHAR(255) primary KEY,
+	user_id VARCHAR(255) ,
+	business_id VARCHAR(255),
+	stars NUMERIC,
+	date DATE,
+	text text,
+	usefull INT,
+	funny INT,
+	cool INT,
+	
+	constraint fk_review_fact_user_user_id 
+	foreign KEY(user_id) references fact_user(user_id),
+	
+	constraint fk_review_review_fact_business_business_id
+	foreign KEY(business_id) references fact_business(business_id)
+)
+```
+
+> `schema\create_table_fact_tip.sql`
+```
+create table fact_tip(
+	user_id VARCHAR(255),
+	business_id VARCHAR(255),
+	text TEXT,
+	date TEXT,
+	compliment_count VARCHAR(255),
+	
+	constraint fk_fact_tip_fact_fact_user_user_id
+	foreign KEY(user_id) references fact_user(user_id),
+	
+	constraint fk_fact_tip_fact_business_business_id
+	foreign key(business_id) references fact_business(business_id)
+	
+)
+```
+
+> `schema\create_table_fact_checkin.sql`
+```
+create table fact_checkin(
+	business_id VARCHAR(255) primary KEY,
+	first_checkin TIMESTAMP,
+	last_checkin TIMESTAMP,
+	total_checkin INT,
+	constraint fk_fact_checkin_fact_business_business_id
+	foreign key(business_id) references fact_business(business_id)
+)
+```
+
+> `schema\create_table_dim_photo.sql`
+```
+create table dim_photo(
+	photo_id VARCHAR(255),
+	business_id VARCHAR(255),
+	caption text,
+	label VARCHAR (255),
+	
+	constraint fk_dim_photo_fact_business_business_id
+	foreign KEY(business_id) references fact_business(business_id)
+)
+```
+
+> `schema\create_table_dim_photo_count.sql`
+
+```
+create table dim_photo_count(
+	business_id VARCHAR(255),
+	total_photos smallint,
+	
+	constraint fk_dim_photo_count_fact_business_total_photos
+	foreign key(business_id) references fact_business(business_id)
+	
+)
+```
+> `schema\create_table_dim_category.sql`
+```
+create table dim_category(
+	id SERIAL primary key,
+	name varchar(255)
+)
+```
+
+> `schema\create_table_link_fact_business_dim_category.sql`
+```
+create table link_fact_business_dim_category(
+	business_id VARCHAR(255),
+	category_id SMALLINT
+)
+```
+
 
 
 
