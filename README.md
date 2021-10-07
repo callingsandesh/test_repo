@@ -974,6 +974,63 @@ So, we loop through the list of query path and pass the parameter to the above m
 For the queries , which take longer to execute , we can set a time and execute it after that specific time when the server is not too busy.
 
 
+### Validation 
+1. Checking the total photo_id and the total distinct photo_id is 0.
+```
+SELECT COUNT(*)-COUNT(distinct photo_id) as total_impacted_row_count ,
+		CASE WHEN (count(*)-COUNT(distinct photo_id))> 0 then 'Failed'
+		ELSE 'Passed'  
+		END as label
+FROM raw_photo rp
+```
+|total_impacted_row_count|label|
+|------------------------|-----|
+|1|Failed|
+
+
+
+2. Checking all the unique photos are associated with the two or more business_id
+```
+WITH cte_r as (
+SELECT photo_id,count(*)as total_impacted_rows from (
+SELECT photo_id,business_id ,COUNT(*) from dim_photo rp
+GROUP BY photo_id ,business_id
+ORDER BY count desc
+)r
+GROUP BY photo_id
+)
+SELECT COUNT(*) as total_impacted_count  from cte_r where total_impacted_rows>1
+```
+|total_impacted_count|
+|--------------------|
+|0|
+
+
+3. Checking if all the friends are not the user
+```
+select COUNT(*)as total_friend_not_user from (
+select distinct(unnest(string_to_array(friends, ','))) as friend from raw_user ru
+except 
+select user_id from raw_user ru
+)
+```
+
+4. Checking if the yelping_since is not in the future
+```
+SELECT COUNT(*) as total_impacted_count,
+	CASE WHEN COUNT(*)> 0 then 'failed'
+	   ELSE 'passed'
+	   END as label
+FROM fact_user fu 
+WHERE yelping_since > now()
+```
+
+
+5. Checking if the average_stars  is not in between 0 and 5
+
+
+6. The review count of a business is not equal to the provided reviews_count at fact_businesss.
+
 
 
 
