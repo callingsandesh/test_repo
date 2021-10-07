@@ -201,7 +201,7 @@ if __name__=='__main__':
 The above main method is used to pass the file_path and the query_path ,databasename and batch_size to the `extract_date()` method, for the execution.
 
 
-After the above all datas are inserted , I create the schemas for the database warehouse.
+### After the above all datas are inserted , I create the schemas for the database warehouse.
 The following are the list of schemas:
 > `schema\create_fact_business.sql`
 ```
@@ -448,7 +448,7 @@ create table dim_review_count(
 )
 ```
 
-After the above table was created , I used the folloing pipeline and sql queries to push the datas from the raw table to the above tables of the warehouse.
+### After the above table was created , I used the folloing pipeline to push the datas from the raw table to the above tables of the warehouse.
 
 > `src\extract_into_warehouse_tables.py`
 This above file , `extract_into_warehouse_tables.py` has 1 function and 1 main method which is mentioned below:
@@ -493,7 +493,7 @@ So, the remaining data left is inserted at the last.
 
 
 
-## The description of the above query_path queries which is used to extract data from the raw tables and insert into the warehouse tables are:
+### The description of the above query_path queries which is used to extract data from the raw tables and insert into the warehouse tables are:
 
 > `src\sql\insert_into_fact_user.sql`
 ```
@@ -972,6 +972,7 @@ The above is the main method, from which the execution of the program starts.It 
 query_path_and_splitter(query which executes faster),query_path_and_splitter_long_time(query which takes longer to execute),time_after_to_execute_the_function   as the variable.
 So, we loop through the list of query path and pass the parameter to the above method `extract_data(path,splitter,database_name,batchsize)` to execute the queries.
 For the queries , which take longer to execute , we can set a time and execute it after that specific time when the server is not too busy.
+
 
 
 
