@@ -415,6 +415,112 @@ create table link_fact_business_dim_category(
 	category_id SMALLINT
 )
 ```
+> `schema\create_table_dim_total_review_words_count.sql`
+```
+create table dim_total_review_words_count(
+	business_id VARCHAR(255) primary KEY,
+	total_review_words_count BIGINT,
+	total_review_distinct_words_count BIGINT,
+	constraint k_dim_total_review_words_count_business_id
+	foreign KEY(business_id) references fact_business(business_id)
+)
+```
+
+> `schema\create_table_total_tip_count.sql`
+```create table total_tip_count(
+	business_id VARCHAR(255) primary KEY,
+	total_tip_count smallint,
+	
+	constraint fk_total_tip_count_fact_business
+	foreign key(business_id) references fact_business(business_id)
+)
+
+```
+> `schema\create_table_dim_review_count.sql`
+```
+create table dim_review_count(
+	business_id VARCHAR(255) primary key,
+	review_count smallint,
+	constraint fk_dim_review_count_fact_business_business_id
+	foreign key(business_id) references fact_business(business_id)
+)
+```
+
+After the above table was created , I used the folloing pipeline and sql queries to push the datas from the raw table to the above tables of the warehouse.
+
+> `src\extract_into_warehouse_tables.py`
+This above file , `extract_into_warehouse_tables.py` has 1 function and 1 main method which is mentioned below:
+```
+def extract_data(query_path,splitter , database_name,batchsize):
+    
+    #opening the query file path 
+    with open(query_path,'r') as query:
+        query=query.read()
+    
+
+    split_loc = query.find(splitter)
+    select_query = query[split_loc:]
+    print(select_query)
+    
+    insert_query = str(query[:split_loc])+"VALUES %s"
+    print(insert_query)
+    connection=connect(database_name)
+    with connection.cursor(name='cur') as cursor:
+
+        cursor.itersize = 10000
+        cursor.execute(select_query)
+        i=0
+        data=[]
+        for row in cursor:
+            data.append(row)
+            i+=1
+            if i==batchsize:
+
+                execute_bulk_insert(insert_query,connect(database_name),data)
+                i=0
+                data=[]
+                continue
+        ##inserting remaining data
+        if data!=[]:
+            execute_bulk_insert(insert_query,connect(database_name),data)
+```
+The above function takes `query_path`, `splitter` , `database_name` and `batchsize` as an argument to the function.
+It first opens the query and splits it from the splitter key-word , so as to form the select statement and insert statement.
+After that it iterates over the raw_tables rows one by one and bulk inserts the data after it reaches the batch size.
+So, the remaining data left is inserted at the last.
+
+```
+if __name__=='__main__':
+    database_name="yelp_db"
+    batchsize=10000
+    
+    query_path_and_splitter = {
+        
+        '../sql/insert_into_fact_user.sql':'SELECT',
+        '../sql/insert_into_dim_elite.sql':'SELECT',
+        '../sql/insert_into_fact_business.sql' : 'WITH',
+        '../sql/insert_into_dim_category.sql':'WITH',
+        '../sql/insert_into_link_fact_business_dim_category.sql':'WITH',
+        '../sql/insert_into_fact_review.sql':'SELECT',
+        '../sql/insert_into_fact_tip.sql':'SELECT',
+        '../sql/insert_into_dim_photo.sql':'SELECT',
+        '../sql/insert_into_dim_photo_count.sql':'SELECT',
+        '../sql/insert_into_dim_review_count.sql':'SELECT',
+        '../sql/insert_into_fact_checkin.sql':'WITH',
+        '../sql/insert_into_total_tip_count.sql':'SELECT',
+        '../sql/insert_into_total_user_tip_count.sql':'SELECT',
+        '../sql/insert_into_dim_total_review_words_count.sql':'WITH'
+
+        }
+    for path,splitter in query_path_and_splitter.items():
+        extract_data(path,splitter,database_name,batchsize)
+
+```
+The above is the main method, from which the execution of the program starts.It has the database_name , batchsize and
+query_path_and_splitter as the variable.
+So, we loop through the list of query path and pass the parameter the the above method `extract_data(path,splitter,database_name,batchsize)`
+
+
 
 
 
