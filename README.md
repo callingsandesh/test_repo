@@ -498,6 +498,7 @@ if __name__=='__main__':
         
         '../sql/insert_into_fact_user.sql':'SELECT',
         '../sql/insert_into_dim_elite.sql':'SELECT',
+	'../sql/insert_into_total_user_tip_count.sql':'SELECT',
         '../sql/insert_into_fact_business.sql' : 'WITH',
         '../sql/insert_into_dim_category.sql':'WITH',
         '../sql/insert_into_link_fact_business_dim_category.sql':'WITH',
@@ -508,7 +509,7 @@ if __name__=='__main__':
         '../sql/insert_into_dim_review_count.sql':'SELECT',
         '../sql/insert_into_fact_checkin.sql':'WITH',
         '../sql/insert_into_total_tip_count.sql':'SELECT',
-        '../sql/insert_into_total_user_tip_count.sql':'SELECT',
+        
         '../sql/insert_into_dim_total_review_words_count.sql':'WITH'
 
         }
@@ -523,7 +524,60 @@ So, we loop through the list of query path and pass the parameter to the above m
 
 
 ## The description of the above query_path queries which is used to extract data from the raw tables and insert into the warehouse tables are:
-> `schema\sql\insert_into_fact_business.sql`
+
+> `src\sql\insert_into_fact_user.sql`
+```
+INSERT INTO fact_user
+	SELECT
+		user_id,
+		name,
+		review_count::INT,
+		yelping_since::TIMESTAMP,
+		useful::INT,
+		funny::INT,
+		cool::INT,
+		fans::INT,
+		array_length(regexp_split_to_array(friends, ','), 1) as friends_count,
+		average_stars::NUMERIC,
+		compliment_hot::INT,
+		compliment_more::INT,
+		compliment_profile::INT,
+		compliment_cute::INT,
+		compliment_list::INT,
+		comliment_note::INT,
+		compliment_plain::INT,
+		compliment_cool::INT,
+		compliment_funny::INT,
+		compliment_writer::INT,
+		compliment_photos::INT
+	FROM raw_user
+```
+
+> `src\sql\insert_into_dim_elite.sql`
+```
+insert into dim_elite
+SELECT 
+	   user_id,
+       unnest(string_to_array(elite, ',')) as elite_year
+from (
+--data cleaning 
+select user_id,replace(elite,'20,20','2020') as elite
+from raw_user ru 
+)r
+```
+
+> `src\sql\insert_into_total_user_tip_count.sql`
+```
+INSERT INTO total_user_tip_count
+SELECT 
+    user_id,
+    count(*) as total_tip_count
+FROM fact_tip
+GROUP BY user_id
+ORDER BY total_tip_count DESC
+```
+
+> `src\sql\insert_into_fact_business.sql`
 ```
 INSERT into fact_business 
 WITH CTE_all_business as (
@@ -770,6 +824,131 @@ WITH CTE_all_business as (
 	from CTE_all_business
 	
 	
+```
+
+> `src\sql\insert_into_dim_category.sql`
+
+```
+INSERT into dim_category(name) 
+WITH cte_categoty as (
+SELECT 
+	   business_id,
+       ltrim( UNNEST(string_to_array(categories, ',')) , ' ') as category
+FROM raw_business rb
+)
+SELECT COUNT(distinct category) FROM cte_categoty
+```
+
+> `src\sql\insert_into_link_fact_business_dim_category.sql`
+```
+INSERT into link_fact_business_dim_category
+WITH cte_categoty as (
+SELECT 
+	business_id,
+        unnest(string_to_array(categories, ',')) as category
+FROM raw_business rb
+)
+SELECT business_id , id from cte_categoty
+INNER JOIN dim_category d
+ON cte_categoty.category = d.name
+```
+
+> `src\sql\insert_into_fact_review.sql`
+```
+INSERT INTO fact_review
+SELECT 
+	review_id ,
+	user_id ,
+	business_id ,
+	stars ,
+	useful ,
+	funny ,
+	cool,
+	text ,
+	date 
+	 
+FROM raw_review rr 
+```
+
+> `src\sql\insert_into_fact_tip.sql`
+```
+INSERT INTO fact_tip
+SELECT 
+    * 
+FROM raw_tip
+```
+
+> `src\sql\insert_into_dim_photo.sql`
+```
+INSERT INTO dim_photo
+SELECT 
+    * 
+FROM raw_photo
+```
+
+> `src\sql\insert_into_dim_photo_count.sql`
+```
+INSERT INTO dim_photo_count
+SELECT business_id, count(*) as total_photos
+    FROM raw_photo rp 
+    GROUP BY business_id 
+    ORDER BY total_photos DESC
+
+```
+
+> `src\sql\insert_into_dim_review_count.sql`
+
+```
+INSERT INTO dim_review_count
+SELECT 
+    business_id ,
+    count(*) AS  review_count
+FROM fact_review fr 
+GROUP BY business_id
+ORDER BY review_count desc
+```
+
+> `src\sql\insert_into_fact_checkin.sql`
+
+```
+INSERT INTO fact_checkin
+WITH cte_checkin AS (
+SELECT
+	business_id,
+	unnest(string_to_array("date", ',')) as checkin
+FROM raw_checkin
+)
+SELECT business_id, MIN(cast(checkin AS TIMESTAMP)) as first_checkin , MAX(cast(checkin AS TIMESTAMP)) AS last_checkin,COUNT(*) AS total_checkin
+FROM cte_checkin
+GROUP BY business_id
+```
+
+> `src\sql\insert_into_total_tip_count.sql`
+```
+INSERT INTO total_tip_count 
+SELECT 
+    business_id,
+    count(*) FROM fact_tip
+GROUP BY business_id
+ORDER BY count DESC
+```
+
+
+> `src\sql\insert_into_dim_total_review_words_count.sql`
+```
+INSERT INTO dim_total_review_words_count
+WITH arranged AS
+(
+  SELECT 
+  		business_id, 
+  		UNNEST(STRING_TO_ARRAY(REGEXP_REPLACE(
+    	REGEXP_SPLIT_TO_TABLE("text", ','), '[^\w\s]', '', 'g'), ' ')) as "word"
+  FROM fact_review
+) 
+SELECT a.business_id, COUNT(a.word) as total_words,COUNT(distinct a.word)
+FROM arranged a
+WHERE LENGTH(word) > 0
+GROUP BY a.business_id
 ```
 
 
