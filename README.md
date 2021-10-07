@@ -489,38 +489,6 @@ It first opens the query and splits it from the splitter key-word , so as to for
 After that it iterates over the raw_tables rows one by one and bulk inserts the data after it reaches the batch size.
 So, the remaining data left is inserted at the last.
 
-```
-if __name__=='__main__':
-    database_name="yelp_db"
-    batchsize=10000
-    
-    query_path_and_splitter = {
-        
-        '../sql/insert_into_fact_user.sql':'SELECT',
-        '../sql/insert_into_dim_elite.sql':'SELECT',
-	'../sql/insert_into_total_user_tip_count.sql':'SELECT',
-        '../sql/insert_into_fact_business.sql' : 'WITH',
-        '../sql/insert_into_dim_category.sql':'WITH',
-        '../sql/insert_into_link_fact_business_dim_category.sql':'WITH',
-        '../sql/insert_into_fact_review.sql':'SELECT',
-        '../sql/insert_into_fact_tip.sql':'SELECT',
-        '../sql/insert_into_dim_photo.sql':'SELECT',
-        '../sql/insert_into_dim_photo_count.sql':'SELECT',
-        '../sql/insert_into_dim_review_count.sql':'SELECT',
-        '../sql/insert_into_fact_checkin.sql':'WITH',
-        '../sql/insert_into_total_tip_count.sql':'SELECT',
-        
-        '../sql/insert_into_dim_total_review_words_count.sql':'WITH'
-
-        }
-    for path,splitter in query_path_and_splitter.items():
-        extract_data(path,splitter,database_name,batchsize)
-
-```
-The above is the main method, from which the execution of the program starts.It has the database_name , batchsize and
-query_path_and_splitter as the variable.
-So, we loop through the list of query path and pass the parameter to the above method `extract_data(path,splitter,database_name,batchsize)`
-
 
 
 ## The description of the above query_path queries which is used to extract data from the raw tables and insert into the warehouse tables are:
@@ -950,5 +918,59 @@ FROM arranged a
 WHERE LENGTH(word) > 0
 GROUP BY a.business_id
 ```
+
+## The main method to execute above queries
+> `src\extract_into_warehouse_tables.py`
+
+```
+if __name__=='__main__':
+    database_name="yelp_db"
+    batchsize=10000
+    
+    #time_to_execute_the_function=input("Enter the time to schedule the query which takes long time in the format ,'%Y-%m-%d %H:%M:%S' ")
+    query_path_and_splitter = {
+        
+        '../sql/insert_into_fact_user.sql':'SELECT',
+        '../sql/insert_into_dim_elite.sql':'SELECT',
+        '../sql/insert_into_fact_business.sql' : 'WITH',
+        '../sql/insert_into_dim_category.sql':'WITH',
+        '../sql/insert_into_link_fact_business_dim_category.sql':'WITH',
+        '../sql/insert_into_fact_review.sql':'SELECT',
+        '../sql/insert_into_fact_tip.sql':'SELECT',
+        '../sql/insert_into_dim_photo.sql':'SELECT',
+        '../sql/insert_into_dim_photo_count.sql':'SELECT',
+        '../sql/insert_into_dim_review_count.sql':'SELECT',
+        '../sql/insert_into_fact_checkin.sql':'WITH',
+        '../sql/insert_into_total_tip_count.sql':'SELECT',
+        '../sql/insert_into_total_user_tip_count.sql':'SELECT',
+       
+
+        }
+    for path,splitter in query_path_and_splitter.items():
+        extract_data(path,splitter,database_name,batchsize)
+
+
+    #place the query which takes very long to execute here so execute it after certain time expires.
+    query_path_and_splitter_long_time = {
+         '../sql/insert_into_dim_total_review_words_count.sql':'WITH'
+    }
+
+    # enter the time to excute the querry after that certain time
+    time_after_to_execute_the_function = "2021-10-07 23:59:00"
+    
+    while True:
+        if datetime.now() > datetime.strptime(time_to_execute_the_function, '%Y-%m-%d %H:%M:%S'):
+            print("Time reached")
+            for path,splitter in query_path_and_splitter.items():
+                extract_data(path,splitter,database_name,batchsize)
+            break
+
+```
+The above is the main method, from which the execution of the program starts.It has the database_name , batchsize and
+query_path_and_splitter(query which executes faster),query_path_and_splitter_long_time(query which takes longer to execute),time_after_to_execute_the_function   as the variable.
+So, we loop through the list of query path and pass the parameter to the above method `extract_data(path,splitter,database_name,batchsize)` to execute the queries.
+For the queries , which take longer to execute , we can set a time and execute it after that specific time when the server is not too busy.
+
+
 
 
