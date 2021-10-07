@@ -116,7 +116,7 @@ create table raw_photo(
 
 
 
-The below function is used to insert data on bulk to the database tables.
+### The below function is used to insert data on bulk to the database tables.
 > `src\helper.py`
 ```
 
@@ -143,7 +143,7 @@ def execute_bulk_insert(query,connection,data):
 
 
 
-After that, I used the pipeline to push the data into the raw tables.
+### After that, I used the pipeline to push the data into the raw tables.
 > `src\execute_into_raw_table.py`
 There are 3 function inside this file.The explanation of each one are:
 ```
