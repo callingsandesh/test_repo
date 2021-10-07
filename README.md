@@ -1024,13 +1024,48 @@ SELECT COUNT(*) as total_impacted_count,
 FROM fact_user fu 
 WHERE yelping_since > now()
 ```
+|total_impacted_count|label|
+|--------------------|-----|
+|0|passed|
+
 
 
 5. Checking if the average_stars  is not in between 0 and 5
+```
+select count(*) as total_impacted_count,
+	case when COUNT(*)> 0 then 'failed'
+	   else 'passed'
+	   end as label
+from fact_user fu 
+where average_stars  < 0 and average_stars >5
+```
+|total_impacted_count|label|
+|--------------------|-----|
+|0|passed|
+
 
 
 6. The review count of a business is not equal to the provided reviews_count at fact_businesss.
-
+```
+SELECT sum(val) as total_impacted_rows,
+	   sum(dim_rc)-sum(business_rc) as total_less_counts
+FROM(
+WITH cte_review_count_validation as (
+SELECT business_id ,fb.review_count as business_rc, drc.review_count as dim_rc
+FROM fact_business fb
+INNER JOIN dim_review_count drc 
+USING(business_id)
+) 
+SELECT CASE WHEN business_rc=dim_rc THEN 0
+	   ELSE 1
+	   END as val,
+	   business_rc,dim_rc
+FROM cte_review_count_validation
+)r
+```
+|total_impacted_rows|total_less_counts|
+|-------------------|-----------------|
+|75423|290676|
 
 
 
